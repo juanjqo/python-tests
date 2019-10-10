@@ -1,21 +1,35 @@
+"""(C) Copyright 2019 DQ Robotics Developers
+
+This file is part of DQ Robotics.
+
+    DQ Robotics is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    DQ Robotics is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with DQ Robotics.  If not, see <http://www.gnu.org/licenses/>.
+
+Contributors:
+- Murilo M. Marinho (murilo@nml.t.u-tokyo.ac.jp)
+"""
+
 import unittest
 import scipy.io
 import numpy
 from dqrobotics import *
+from DQ_test_facilities import get_list_of_dq_from_mat
 
 mat = scipy.io.loadmat('DQ_test.mat')
 
-
-def get_list_of_dq_from_mat(name, mat):
-    dq_mat = mat[name]
-    dq_list = []
-    for vec in numpy.transpose(dq_mat):
-        dq_list.append(DQ(vec))
-    return dq_list
-
-
 dq_a_list = get_list_of_dq_from_mat('random_dq_a', mat)
 dq_b_list = get_list_of_dq_from_mat('random_dq_b', mat)
+
 
 class DQTestCase(unittest.TestCase):
     global mat

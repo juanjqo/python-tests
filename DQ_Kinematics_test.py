@@ -1,0 +1,151 @@
+"""(C) Copyright 2019 DQ Robotics Developers
+
+This file is part of DQ Robotics.
+
+    DQ Robotics is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    DQ Robotics is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with DQ Robotics.  If not, see <http://www.gnu.org/licenses/>.
+
+Contributors:
+- Murilo M. Marinho (murilo@nml.t.u-tokyo.ac.jp)
+"""
+
+import unittest
+import scipy.io
+import numpy
+from dqrobotics.robots import KukaLw4Robot
+from dqrobotics import *
+from DQ_test_facilities import *
+
+# The data from MATLAB
+mat = scipy.io.loadmat('DQ_Kinematics_test.mat')
+# A list of random DQs
+h_list = get_list_of_dq_from_mat('random_dq_a', mat)
+# A list of random joint values
+q_list = get_list_of_vector_from_mat('random_q', mat)
+# A list of the result of fkm() for the list of random joint values
+pose_list = get_list_of_dq_from_mat('result_of_fkm', mat)
+# A list of the result of pose_jacobian() for the list of random joint values
+pose_jacobian_list = get_list_of_matrices_from_mat('result_of_pose_jacobian', mat)
+# A list of translation_jacobian() for the list of random joint values
+translation_jacobian_list = get_list_of_matrices_from_mat('result_of_translation_jacobian', mat)
+line_jacobian_list = get_list_of_matrices_from_mat('result_of_line_jacobian', mat)
+plane_jacobian_list = get_list_of_matrices_from_mat('result_of_plane_jacobian', mat)
+# The robot used to calculate everything
+robot = KukaLw4Robot.kinematics()
+
+
+class DQTestCase(unittest.TestCase):
+    global mat
+    global h_list
+    global q_list
+    global pose_list
+    global pose_jacobian_list
+    global translation_jacobian_list
+    global line_jacobian_list
+    global plane_jacobian_list
+    global robot
+
+    # fkm
+    def test_fkm(self):
+        for q, x in zip(q_list, pose_list):
+            self.assertEqual(robot.fkm(q), x, "Error in fkm")
+
+    # pose_jacobian
+    def test_pose_jacobian(self):
+        for q, J in zip(q_list, pose_jacobian_list):
+            numpy.testing.assert_almost_equal(robot.pose_jacobian(q), J, 12, "Error in pose_jacobian")
+
+    def test_distance_jacobian(self):
+        distance_jacobian_list = get_list_of_matrices_from_mat('result_of_distance_jacobian', mat)
+        for J, x, distance_jacobian in zip(pose_jacobian_list, pose_list, distance_jacobian_list):
+            numpy.testing.assert_almost_equal(robot.distance_jacobian(J, x), distance_jacobian, 12,
+                                              "Error in distance_jacobian")
+
+    def test_rotation_jacobian(self):
+        rotation_jacobian_list = get_list_of_matrices_from_mat('result_of_rotation_jacobian', mat)
+        for J, rotation_jacobian in zip(pose_jacobian_list, rotation_jacobian_list):
+            numpy.testing.assert_almost_equal(robot.rotation_jacobian(J), rotation_jacobian, 12,
+                                              "Error in rotation_jacobian")
+
+    def test_translation_jacobian(self):
+        for J, x, Jt in zip(pose_jacobian_list, pose_list, translation_jacobian_list):
+            numpy.testing.assert_almost_equal(robot.translation_jacobian(J, x), Jt, 12, "Error in translation_jacobian")
+
+    def test_line_jacobian(self):
+        for J, x, Jl in zip(pose_jacobian_list, pose_list, line_jacobian_list):
+            numpy.testing.assert_almost_equal(robot.line_jacobian(J, x, k_), Jl, 12, "Error in line_jacobian")
+
+    def test_plane_jacobian(self):
+        for J, x, Jpi in zip(pose_jacobian_list, pose_list, plane_jacobian_list):
+            numpy.testing.assert_almost_equal(robot.plane_jacobian(J, x, k_), Jpi, 12, "Error in plane_jacobian")
+
+    def test_line_to_line_distance_jacobian(self):
+        result_of_line_to_line_distance_jacobian = get_list_of_matrices_from_mat(
+            'result_of_line_to_line_distance_jacobian', mat)
+        for Jl, x, h, result in zip(line_jacobian_list, pose_list, h_list, result_of_line_to_line_distance_jacobian):
+            numpy.testing.assert_almost_equal(
+                robot.line_to_line_distance_jacobian(Jl, get_line_from_dq(x, k_), get_line_from_dq(h, k_)),
+                result,
+                12, "Error in line_to_line_distance_jacobian")
+
+    def test_line_to_point_distance_jacobian(self):
+        result_of_line_to_point_distance_jacobian = get_list_of_matrices_from_mat(
+            'result_of_line_to_point_distance_jacobian', mat)
+        for Jl, x, h, result in zip(line_jacobian_list, pose_list, h_list, result_of_line_to_point_distance_jacobian):
+            numpy.testing.assert_almost_equal(
+                robot.line_to_point_distance_jacobian(Jl, get_line_from_dq(x, k_), get_point_from_dq(h)),
+                result,
+                12, "Error in line_to_point_distance_jacobian")
+
+    def test_plane_to_point_distance_jacobian(self):
+        result_of_plane_to_point_distance_jacobian = get_list_of_matrices_from_mat(
+            'result_of_plane_to_point_distance_jacobian', mat)
+        for Jpi, x, h, result in zip(plane_jacobian_list, pose_list, h_list,
+                                     result_of_plane_to_point_distance_jacobian):
+            numpy.testing.assert_almost_equal(robot.plane_to_point_distance_jacobian(Jpi, get_point_from_dq(h)),
+                                              result,
+                                              12, "Error in plane_to_point_distance_jacobian")
+
+    def test_point_to_line_distance_jacobian(self):
+        result_of_point_to_line_distance_jacobian = get_list_of_matrices_from_mat(
+            'result_of_point_to_line_distance_jacobian', mat)
+        for Jt, x, h, result in zip(translation_jacobian_list, pose_list, h_list,
+                                    result_of_point_to_line_distance_jacobian):
+            numpy.testing.assert_almost_equal(
+                robot.point_to_line_distance_jacobian(Jt, translation(x), get_line_from_dq(h, k_)),
+                result,
+                12, "Error in point_to_line_distance_jacobian")
+
+    def test_point_to_plane_distance_jacobian(self):
+        result_of_point_to_plane_distance_jacobian = get_list_of_matrices_from_mat(
+            'result_of_point_to_plane_distance_jacobian', mat)
+        for Jt, x, h, result in zip(translation_jacobian_list, pose_list, h_list,
+                                    result_of_point_to_plane_distance_jacobian):
+            numpy.testing.assert_almost_equal(
+                robot.point_to_plane_distance_jacobian(Jt, translation(x), get_plane_from_dq(h, k_)),
+                result,
+                12, "Error in point_to_plane_distance_jacobian")
+
+    def test_point_to_point_distance_jacobian(self):
+        result_of_point_to_point_distance_jacobian = get_list_of_matrices_from_mat(
+            'result_of_point_to_point_distance_jacobian', mat)
+        for Jt, x, h, result in zip(translation_jacobian_list, pose_list, h_list,
+                                    result_of_point_to_point_distance_jacobian):
+            numpy.testing.assert_almost_equal(
+                robot.point_to_point_distance_jacobian(Jt, translation(x), get_point_from_dq(h)),
+                result,
+                12, "Error in point_to_point_distance_jacobian")
+
+
+if __name__ == '__main__':
+    unittest.main()
