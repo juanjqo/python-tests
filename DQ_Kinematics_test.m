@@ -5,16 +5,22 @@ include_namespace_dq
 
 NUMBER_OF_RANDOM = 1000;
 
-robot = KukaLwr4Robot.kinematics();
+serial_manipulator = KukaLwr4Robot.kinematics();
+whole_body = KukaYoubot.kinematics();
 
 %% Generate data for unary and binary operators
 random_q = random('unif',-pi,pi,[7 NUMBER_OF_RANDOM]);
+random_q_whole_body = random('unif',-pi,pi,[8 NUMBER_OF_RANDOM]);
 random_dq_a = random('unif',-10,10,[8 NUMBER_OF_RANDOM]);
 %random_dq_b = random('unif',-10,10,[8 NUMBER_OF_RANDOM]);
 
-%% Binary
+%% Pre-allocate results
 result_of_fkm = zeros(8, NUMBER_OF_RANDOM);
 result_of_pose_jacobian = zeros(8, 7, NUMBER_OF_RANDOM);
+
+result_of_whole_body_fkm = zeros(8, NUMBER_OF_RANDOM);
+result_of_whole_body_jacobian = zeros(8, 8, NUMBER_OF_RANDOM);
+
 %       distance_jacobian - Compute the (squared) distance Jacobian.
 result_of_distance_jacobian = zeros(1, 7, NUMBER_OF_RANDOM);
 %       rotation_jacobian - Compute the rotation Jacobian.
@@ -60,27 +66,34 @@ result_of_point_to_point_distance_jacobian = zeros(1, 7, NUMBER_OF_RANDOM);
 for i=1:NUMBER_OF_RANDOM
     %% Preliminaries
     ha = DQ(random_dq_a(:,i));
-    x_pose = robot.fkm(random_q(:,i));
-    J_pose = robot.pose_jacobian(random_q(:,i));
-    translation_jacobian = DQ_Kinematics.translation_jacobian(J_pose, x_pose);
-    line_jacobian = DQ_Kinematics.line_jacobian(J_pose, x_pose, k_);
-    plane_jacobian = DQ_Kinematics.plane_jacobian(J_pose, x_pose, k_);
+    
+    %% DQ_SerialManipulator
+    x_pose = serial_manipulator.fkm(random_q(:,i));
+    J_pose = serial_manipulator.pose_jacobian(random_q(:,i));
+    
+    %% Preliminaries for DQ_Kinematics
     robot_point = translation(x_pose);
     robot_line = get_line_from_dq(x_pose, k_);
     robot_plane = get_plane_from_dq(x_pose, k_);
     workspace_line = get_line_from_dq(ha, k_);
     workspace_point = translation(normalize(ha));
     workspace_plane = get_plane_from_dq(ha, k_);
+    translation_jacobian = DQ_Kinematics.translation_jacobian(J_pose, x_pose);
+    line_jacobian = DQ_Kinematics.line_jacobian(J_pose, x_pose, k_);
+    plane_jacobian = DQ_Kinematics.plane_jacobian(J_pose, x_pose, k_);
     
-    %% Results
+    %% Results of DQ_SerialManipulator
     result_of_fkm(:, i) = vec8(x_pose);
     result_of_pose_jacobian(:,:,i) = J_pose;
+    %% Results of DQ_WholeBody
+    result_of_whole_body_fkm(:, i) = vec8(whole_body.fkm(random_q_whole_body(:,i)));
+    result_of_whole_body_jacobian(:,:,i) = whole_body.pose_jacobian(random_q_whole_body(:,i));
+    %% Results of DQ_Kinematics
     result_of_distance_jacobian(:,:,i) = DQ_Kinematics.distance_jacobian(J_pose,x_pose);
     result_of_rotation_jacobian(:,:,i) = DQ_Kinematics.rotation_jacobian(J_pose);
     result_of_translation_jacobian(:,:,i) = translation_jacobian;
     result_of_line_jacobian(:,:,i) = line_jacobian;
     result_of_plane_jacobian(:,:,i) = plane_jacobian;
-    
     result_of_line_to_line_distance_jacobian(:,:,i) = DQ_Kinematics.line_to_line_distance_jacobian(line_jacobian,robot_line,workspace_line);
     result_of_line_to_point_distance_jacobian(:,:,i) = DQ_Kinematics.line_to_point_distance_jacobian(line_jacobian,robot_line,workspace_point);
     result_of_plane_to_point_distance_jacobian(:,:,i) = DQ_Kinematics.plane_to_point_distance_jacobian(plane_jacobian,workspace_point);
