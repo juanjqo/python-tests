@@ -64,6 +64,14 @@ class DQTestCase(unittest.TestCase):
         for q, J in zip(serial_manipulator_q_list, serial_manipulator_pose_jacobian_list):
             numpy.testing.assert_almost_equal(serial_manipulator_robot.pose_jacobian(q), J, 12, "Error in DQ_SerialManipultor.pose_jacobian")
 
+
+    def test_serial_manipulator_pose_jacobian_derivative(self):
+        serial_manipulator_q_dot_list = get_list_of_vector_from_mat('random_q_dot', mat)
+        serial_manipulator_pose_jacobian_derivative_list = get_list_of_matrices_from_mat('result_of_pose_jacobian_derivative', mat)
+        for q, q_dot, J_dot in zip(serial_manipulator_q_list, serial_manipulator_q_dot_list, serial_manipulator_pose_jacobian_derivative_list):
+            numpy.testing.assert_almost_equal(serial_manipulator_robot.pose_jacobian_derivative(q, q_dot), J_dot, 12,
+                                              "Error in DQ_SerialManipultor.pose_jacobian_derivative")
+
     # DQ_WholeBody.fkm
     def test_whole_body_fkm(self):
         whole_body_robot = KukaYoubotRobot.kinematics()

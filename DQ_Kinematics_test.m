@@ -10,6 +10,7 @@ whole_body = KukaYoubot.kinematics();
 
 %% Generate data for unary and binary operators
 random_q = random('unif',-pi,pi,[7 NUMBER_OF_RANDOM]);
+random_q_dot = random('unif',-pi,pi,[7 NUMBER_OF_RANDOM]);
 random_q_whole_body = random('unif',-pi,pi,[8 NUMBER_OF_RANDOM]);
 random_dq_a = random('unif',-10,10,[8 NUMBER_OF_RANDOM]);
 %random_dq_b = random('unif',-10,10,[8 NUMBER_OF_RANDOM]);
@@ -17,6 +18,7 @@ random_dq_a = random('unif',-10,10,[8 NUMBER_OF_RANDOM]);
 %% Pre-allocate results
 result_of_fkm = zeros(8, NUMBER_OF_RANDOM);
 result_of_pose_jacobian = zeros(8, 7, NUMBER_OF_RANDOM);
+result_of_pose_jacobian_derivative = zeros(8, 7, NUMBER_OF_RANDOM);
 
 result_of_whole_body_fkm = zeros(8, NUMBER_OF_RANDOM);
 result_of_whole_body_jacobian = zeros(8, 8, NUMBER_OF_RANDOM);
@@ -85,6 +87,7 @@ for i=1:NUMBER_OF_RANDOM
     %% Results of DQ_SerialManipulator
     result_of_fkm(:, i) = vec8(x_pose);
     result_of_pose_jacobian(:,:,i) = J_pose;
+    result_of_pose_jacobian_derivative(:,:,i) = serial_manipulator.pose_jacobian_derivative(random_q(:,i),random_q_dot(:,i));
     %% Results of DQ_WholeBody
     result_of_whole_body_fkm(:, i) = vec8(whole_body.fkm(random_q_whole_body(:,i)));
     result_of_whole_body_jacobian(:,:,i) = whole_body.pose_jacobian(random_q_whole_body(:,i));
