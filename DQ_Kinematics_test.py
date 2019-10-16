@@ -170,5 +170,16 @@ class DQTestCase(unittest.TestCase):
                 12, "Error in point_to_point_distance_jacobian")
 
 
+    def test_line_to_line_angle_jacobian(self):
+        result_of_line_to_line_angle_jacobian = get_list_of_matrices_from_mat(
+            'result_of_line_to_line_angle_jacobian', mat)
+        for Jl, x, h, result in zip(line_jacobian_list, serial_manipulator_pose_list, h_list,
+                                    result_of_line_to_line_angle_jacobian):
+            numpy.testing.assert_almost_equal(
+                serial_manipulator_robot.line_to_line_angle_jacobian(Jl, get_line_from_dq(x, k_), get_line_from_dq(h, k_)),
+                result,
+                12, "Error in test_line_to_line_angle_jacobian")
+
+
 if __name__ == '__main__':
     unittest.main()
