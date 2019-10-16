@@ -2,7 +2,6 @@ clear all;
 close all;
 include_namespace_dq
 
-
 NUMBER_OF_RANDOM = 1000;
 
 serial_manipulator = KukaLwr4Robot.kinematics();
@@ -61,6 +60,7 @@ result_of_point_to_point_distance_jacobian = zeros(1, 7, NUMBER_OF_RANDOM);
 %       point_to_point_residual - Compute the point to point residual.
 
 %       line_to_line_angle_jacobian - Compute the line-to-line angle Jacobian.
+result_of_line_to_line_angle_jacobian = zeros(1, 7, NUMBER_OF_RANDOM);
 
 
 
@@ -103,6 +103,7 @@ for i=1:NUMBER_OF_RANDOM
     result_of_point_to_line_distance_jacobian(:,:,i) = DQ_Kinematics.point_to_line_distance_jacobian(translation_jacobian,robot_point,workspace_line);
     result_of_point_to_plane_distance_jacobian(:,:,i) = DQ_Kinematics.point_to_plane_distance_jacobian(translation_jacobian,robot_point,workspace_plane);
     result_of_point_to_point_distance_jacobian(:,:,i) = DQ_Kinematics.point_to_point_distance_jacobian(translation_jacobian,robot_point,workspace_point);
+    result_of_line_to_line_angle_jacobian(:,:,i) = DQ_Kinematics.line_to_line_angle_jacobian(line_jacobian,robot_line,workspace_line);
 end
 
 save DQ_Kinematics_test.mat
