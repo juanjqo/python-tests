@@ -21,6 +21,15 @@ class DQTestCase(unittest.TestCase):
         print("is_unit(x) = {}".format(is_unit(x)))
         print("translation(x) = {}".format(translation(x)))
 
+    # Print function malfunctioning
+    def test_python_issue_18(self):
+        r = DQ([0.5068154, -0.8591303, 0.0555768, -0.0440969])
+        r = normalize(r)
+        axis = r.rotation_axis()
+        angle = r.rotation_angle()
+        self.assertEqual(' - 0.996608i + 0.06447j - 0.051153k', str(axis))
+        self.assertEqual('2.0786195489067434', str(angle))
+
 
 if __name__ == '__main__':
     unittest.main()
