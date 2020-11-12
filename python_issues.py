@@ -30,6 +30,12 @@ class DQTestCase(unittest.TestCase):
         self.assertEqual(' - 0.996608i + 0.06447j - 0.051153k', str(axis))
         self.assertEqual('2.0786195489067434', str(angle))
 
+    def test_python_issue_22(self):
+        from dqrobotics.robot_modeling import DQ_DifferentialDriveRobot
+        q = np.array([0.12, 0.0, 0.0])
+        diff_robot = DQ_DifferentialDriveRobot(1, 1)
+        J = diff_robot.pose_jacobian(q)
+        print(J)
 
 if __name__ == '__main__':
     unittest.main()
