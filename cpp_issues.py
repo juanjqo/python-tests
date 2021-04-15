@@ -1,4 +1,5 @@
 import unittest
+import numpy
 
 from dqrobotics import *
 from dqrobotics.robots import *
@@ -43,7 +44,7 @@ class DQTestCase(unittest.TestCase):
         # Arbitrary joint values
         q0 = np.array([0.0, 1.7453e-01, 0.0, 1.5708, 0.0, 2.6273e-01, 0.0])
 
-        self.assertAlmostEqual(controller.get_task_variable(q0), [0.7716435593916681767723275697790086269378662109375])
+        numpy.testing.assert_almost_equal(controller.get_task_variable(q0), [0.7716435593916681767723275697790086269378662109375])
 
 
 if __name__ == '__main__':
