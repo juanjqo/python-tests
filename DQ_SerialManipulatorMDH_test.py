@@ -141,7 +141,7 @@ class DQTestCase(unittest.TestCase):
             q = q_list [:,i]
             q_dot = q_dot_list[:, i]
             J1_dot = StanfordDHRobot.pose_jacobian_derivative(q, q_dot)
-            J2_dot = haminus8(StanfordMDHRobot.get_effector())@StanfordMDHRobot.pose_jacobian_derivative(q, q_dot)
+            J2_dot = StanfordMDHRobot.pose_jacobian_derivative(q, q_dot)
             np.testing.assert_almost_equal(J1_dot, J2_dot , 12,
                                            "Error in DQ_SerialManipulatorMDH.pose_jacobian_derivative()")
 
