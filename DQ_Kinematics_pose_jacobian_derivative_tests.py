@@ -209,9 +209,12 @@ class DQTestCase(unittest.TestCase):
     ## test_serial_manipulator_denso_pose_jacobian_derivative
     # Performs the unit tests of the DQ_SerialManipulatorDenso.pose_jacobian_derivative() method
     def test_serial_manipulator_denso_pose_jacobian_derivative(self):
-        njoints = robotDenso.get_dim_configuration_space()
-        with self.assertRaises(Exception):
-            J_dot = robotDenso.pose_jacobian_derivative(np.zeros(njoints), np.zeros(njoints))
+        iterations = 5000
+        J_dot, Numerical_J_dot_ = compute_jacobian_derivatives(robotDenso, iterations, 1e-4)
+        for i in range(0, iterations):
+            if (i > 4 and i < iterations - 4):
+                np.testing.assert_almost_equal(J_dot[i, :, :], Numerical_J_dot_[i, :, :],  10,
+                                               "Error in DQ_SerialManipulatorDenso.pose_jacobian_derivative()")
 
 
     ## test_serial_whole_body_pose_jacobian_derivative
