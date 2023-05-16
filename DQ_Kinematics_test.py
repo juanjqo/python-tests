@@ -30,7 +30,7 @@ from dqrobotics.robots import KukaLw4Robot, KukaYoubotRobot
 from dqrobotics.robot_modeling import DQ_FreeFlyingRobot
 from dqrobotics import *
 from DQ_test_facilities import *
-
+import math
 # The data from MATLAB
 mat = scipy.io.loadmat('DQ_Kinematics_test_16_05_2023.mat')
 # A list of random DQs
@@ -47,10 +47,11 @@ line_jacobian_list = get_list_of_matrices_from_mat('result_of_line_jacobian', ma
 plane_jacobian_list = get_list_of_matrices_from_mat('result_of_plane_jacobian', mat)
 # The DQ_SerialManipulator used to calculate everything for DQ_Kinematics as well
 serial_manipulator_robot = KukaLw4Robot.kinematics()
-
-
+# The DQ_FreeFlyingRobot
 free_flying_robot = DQ_FreeFlyingRobot()
 
+
+threshold = -math.log10(DQ_threshold)
 class DQTestCase(unittest.TestCase):
     global mat
     global h_list
@@ -104,7 +105,7 @@ class DQTestCase(unittest.TestCase):
     def test_free_flying_robot_pose_jacobian(self):
         free_flying_pose_jacobian_list = get_list_of_matrices_from_mat('result_of_free_flying_robot_pose_jacobian', mat)
         for q, J in zip(h_list, free_flying_pose_jacobian_list):
-            numpy.testing.assert_almost_equal(free_flying_robot.pose_jacobian(q), J, 12, "Error in DQ_FreeFlyingRobot.pose_jacobian")
+            numpy.testing.assert_almost_equal(free_flying_robot.pose_jacobian(q), J, threshold, "Error in DQ_FreeFlyingRobot.pose_jacobian")
 
     def test_distance_jacobian(self):
         distance_jacobian_list = get_list_of_matrices_from_mat('result_of_distance_jacobian', mat)
