@@ -1,4 +1,4 @@
-"""(C) Copyright 2022 DQ Robotics Developers
+"""(C) Copyright 2022-2023 DQ Robotics Developers
 
 This file is part of DQ Robotics.
 
@@ -24,13 +24,14 @@ from dqrobotics.robot_modeling import DQ_SerialManipulatorDH
 from dqrobotics.robot_modeling import DQ_SerialManipulatorMDH
 from dqrobotics.robot_modeling import DQ_HolonomicBase
 from dqrobotics.robot_modeling import DQ_DifferentialDriveRobot
+from dqrobotics.robot_modeling import DQ_FreeFlyingRobot
 from dqrobotics.robots import FrankaEmikaPandaRobot
 from dqrobotics.robots import KukaLw4Robot
 from dqrobotics.robots import KukaYoubotRobot
 from dqrobotics.robot_modeling import DQ_SerialManipulatorDenso
 from dqrobotics.robot_modeling import DQ_WholeBody
 import numpy as np
-from math import pi, sin , cos
+from math import pi, sin , cos, sqrt
 
 
 def numerical_differentiation(J, T):
@@ -56,7 +57,7 @@ def numerical_differentiation(J, T):
 
 def compute_jacobian_derivatives(robot, iterations, T):
     """
-    returns the pose_jacobian_derivative using the analytical and
+    returns the pose_jacobian_derivative using the analytical and the
     numerical approach of a DQ_Kinematics robot.
 
     Args:
@@ -87,6 +88,43 @@ def compute_jacobian_derivatives(robot, iterations, T):
             q_dot[j] = theta_dot
         J[i, :, :] = robot.pose_jacobian(q)
         J_dot[i, :, :] = robot.pose_jacobian_derivative(q, q_dot)
+    numerical_J_dot = numerical_differentiation(J, T)
+    return J_dot, numerical_J_dot
+
+
+
+def compute_free_flying_robot_jacobian_derivatives(robot, iterations, T):
+    """
+    returns the pose_jacobian_derivative using the analytical and the
+    numerical approach of a DQ_FreeFlyingRobot.
+
+    Args:
+        robot:   A  DQ_FreeFlyingRobot robot.
+        iterations:  Number of trials. Example: 5000
+        T: Step size. Example: 1e-4
+    Returns:
+        J_dot: A np array of size (iterations, 8, 8) containing the pose jacobian derivatives of all trials
+               using the DQ_FreeFlyingRobot.pose_jacobian_derivative method.
+        numerical_J_dot: A np array of size (iterations, 8, 8) containing the pose jacobian derivatives of all trials
+               using numerical differentiation
+    """
+    J = np.zeros((iterations, 8, 8))
+    J_dot = np.zeros((iterations, 8, 8))
+    for i in range(0, iterations):
+        t = i * T
+        phi = 2*t
+        phi_dot = 2
+        n = i_*cos(t)*(1/sqrt(2)) + j_*sin(t) + k_*cos(t)*(1/sqrt(2))
+        n_dot = -i_*sin(t)*(1/sqrt(2))+ j_*cos(t) -k_*sin(t)*(1/sqrt(2))
+        r = cos(phi/2) + n*sin(phi/2)
+        r_dot = -0.5*sin(phi/2)*phi_dot + n_dot*sin(phi/2) + 0.5*n*cos(phi/2)*phi_dot
+        p = i_*cos(t) + j_*sin(t) + k_*t
+        p_dot = -sin(t)*i_ + cos(t)*j_ + k_
+        x = r + 0.5*E_*p*r
+        x_dot = r_dot + E_*0.5*(p_dot*r + p*r_dot)
+
+        J[i, :, :] = robot.pose_jacobian(x)
+        J_dot[i, :, :] = robot.pose_jacobian_derivative(x_dot)
     numerical_J_dot = numerical_differentiation(J, T)
     return J_dot, numerical_J_dot
 
@@ -157,6 +195,11 @@ stanfordDHRobot = robotDH
 stanfordMDHRobot = robotMDH
 youbot = KukaYoubotRobot.kinematics()
 
+
+#######################################################################################
+#######################################################################################
+free_flying_robot = DQ_FreeFlyingRobot()
+
 ## DQTestCase class.
 #  This class performs the unit tests of the DQ_Kinematics::pose_jacobian_derivative class.
 class DQTestCase(unittest.TestCase):
@@ -168,6 +211,7 @@ class DQTestCase(unittest.TestCase):
     global robotDenso
     global youbot
     global whole_body_robot
+    global free_flying_robot
 
     ## test_holonomic_base_pose_jacobian_derivative
     # Performs the unit tests of the DQ_HolonomicBase.pose_jacobian_derivative() method
@@ -201,7 +245,17 @@ class DQTestCase(unittest.TestCase):
                     np.testing.assert_almost_equal(J_dot[i, :, :], Numerical_J_dot_[i, :, :],  10,
                                                    "Error in DQ_SerialManipulator.pose_jacobian_derivative()")
 
+    ## test_free_flying_robot_pose_jacobian_derivative
+    # Performs the unit tests of the DQ_FreeFlyingRobot.pose_jacobian_derivative() method
+    def test_free_flying_robot_pose_jacobian_derivative(self):
+        iterations = 5000
+        J_dot, Numerical_J_dot_ = compute_free_flying_robot_jacobian_derivatives(free_flying_robot, iterations, 1e-4)
+        for i in range(0, iterations):
+            if (i > 4 and i < iterations - 4):
+                np.testing.assert_almost_equal(J_dot[i, :, :], Numerical_J_dot_[i, :, :],  10,
+                                               "Error in DQ_FreeFlyingRobot.pose_jacobian_derivative()")
 
+                
     ##########################################################################################################
     ##########################################################################################################
     ####     Testing classes where the pose jacobian derivative method is not available for the user
@@ -230,6 +284,7 @@ class DQTestCase(unittest.TestCase):
         njoints = whole_body_robot.get_dim_configuration_space()
         with self.assertRaises(Exception):
           J_dot = whole_body_robot.pose_jacobian_derivative(np.zeros(njoints), np.zeros(njoints))
+
 
 if __name__ == '__main__':
     unittest.main()
