@@ -6,6 +6,7 @@ NUMBER_OF_RANDOM = 1000;
 
 serial_manipulator = KukaLwr4Robot.kinematics();
 whole_body = KukaYoubot.kinematics();
+free_flying_robot  = DQ_FreeFlyingRobot();
 
 %% Generate data for unary and binary operators
 random_q = random('unif',-pi,pi,[7 NUMBER_OF_RANDOM]);
@@ -21,6 +22,9 @@ result_of_pose_jacobian_derivative = zeros(8, 7, NUMBER_OF_RANDOM);
 
 result_of_whole_body_fkm = zeros(8, NUMBER_OF_RANDOM);
 result_of_whole_body_jacobian = zeros(8, 8, NUMBER_OF_RANDOM);
+
+result_of_free_flying_robot_fkm = zeros(8, NUMBER_OF_RANDOM);
+result_of_free_flying_robot_pose_jacobian = zeros(8, 8, NUMBER_OF_RANDOM);
 
 %       distance_jacobian - Compute the (squared) distance Jacobian.
 result_of_distance_jacobian = zeros(1, 7, NUMBER_OF_RANDOM);
@@ -91,6 +95,9 @@ for i=1:NUMBER_OF_RANDOM
     %% Results of DQ_WholeBody
     result_of_whole_body_fkm(:, i) = vec8(whole_body.fkm(random_q_whole_body(:,i)));
     result_of_whole_body_jacobian(:,:,i) = whole_body.pose_jacobian(random_q_whole_body(:,i));
+    %% Results of DQ_FreeFlyingRobot
+    result_of_free_flying_robot_fkm(:, i) = vec8(free_flying_robot.fkm(ha));
+    result_of_free_flying_robot_pose_jacobian(:,:,i) = free_flying_robot.pose_jacobian(ha);
     %% Results of DQ_Kinematics
     result_of_distance_jacobian(:,:,i) = DQ_Kinematics.distance_jacobian(J_pose,x_pose);
     result_of_rotation_jacobian(:,:,i) = DQ_Kinematics.rotation_jacobian(J_pose);
@@ -106,7 +113,7 @@ for i=1:NUMBER_OF_RANDOM
     result_of_line_to_line_angle_jacobian(:,:,i) = DQ_Kinematics.line_to_line_angle_jacobian(line_jacobian,robot_line,workspace_line);
 end
 
-save DQ_Kinematics_test.mat
+save DQ_Kinematics_test_16_05_2023.mat
 
 function ret = get_line_from_dq(dq, primitive)
 include_namespace_dq
