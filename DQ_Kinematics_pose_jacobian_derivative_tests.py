@@ -31,7 +31,7 @@ from dqrobotics.robots import KukaYoubotRobot
 from dqrobotics.robot_modeling import DQ_SerialManipulatorDenso
 from dqrobotics.robot_modeling import DQ_WholeBody
 import numpy as np
-from math import pi, sin , cos, sqrt
+from math import pi, sin, cos, sqrt, log10
 
 
 def numerical_differentiation(J, T):
@@ -200,6 +200,11 @@ youbot = KukaYoubotRobot.kinematics()
 #######################################################################################
 free_flying_robot = DQ_FreeFlyingRobot()
 
+
+
+# Threshold related to DQ_threshold
+threshold = -log10(DQ_threshold)
+
 ## DQTestCase class.
 #  This class performs the unit tests of the DQ_Kinematics::pose_jacobian_derivative class.
 class DQTestCase(unittest.TestCase):
@@ -252,10 +257,10 @@ class DQTestCase(unittest.TestCase):
         J_dot, Numerical_J_dot_ = compute_free_flying_robot_jacobian_derivatives(free_flying_robot, iterations, 1e-4)
         for i in range(0, iterations):
             if (i > 4 and i < iterations - 4):
-                np.testing.assert_almost_equal(J_dot[i, :, :], Numerical_J_dot_[i, :, :],  10,
+                np.testing.assert_almost_equal(J_dot[i, :, :], Numerical_J_dot_[i, :, :],  threshold,
                                                "Error in DQ_FreeFlyingRobot.pose_jacobian_derivative()")
 
-                
+
     ##########################################################################################################
     ##########################################################################################################
     ####     Testing classes where the pose jacobian derivative method is not available for the user
