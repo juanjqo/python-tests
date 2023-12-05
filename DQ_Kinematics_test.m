@@ -8,10 +8,9 @@ serial_manipulator = KukaLwr4Robot.kinematics();
 whole_body = KukaYoubot.kinematics();
 
 %% Create a serial-whole-body robot
-serial_manipulator_2 = FrankaEmikaPandaRobot.kinematics();
 serial_whole_body = DQ_SerialWholeBody(serial_manipulator);
 serial_whole_body.set_reference_frame(1 + 0.5*E_*(0.5*k_));
-serial_whole_body.add(serial_manipulator_2);
+serial_whole_body.add(FrankaEmikaPandaRobot.kinematics());
 
 %% Generate data for unary and binary operators
 random_q = random('unif',-pi,pi,[7 NUMBER_OF_RANDOM]);
