@@ -72,7 +72,6 @@ class DQTestCase(unittest.TestCase):
     global serial_whole_body_q_list
     global serial_whole_body_raw_pose_list
     global serial_whole_body_pose_list
-    global serial_whole_body_pose_jacobian_list
     global translation_jacobian_list
     global line_jacobian_list
     global plane_jacobian_list
