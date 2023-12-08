@@ -7,10 +7,16 @@ NUMBER_OF_RANDOM = 1000;
 serial_manipulator = KukaLwr4Robot.kinematics();
 whole_body = KukaYoubot.kinematics();
 
+%% Create a serial-whole-body robot
+serial_whole_body = DQ_SerialWholeBody(serial_manipulator);
+serial_whole_body.set_reference_frame(1 + 0.5*E_*(0.5*k_));
+serial_whole_body.add(FrankaEmikaPandaRobot.kinematics());
+
 %% Generate data for unary and binary operators
 random_q = random('unif',-pi,pi,[7 NUMBER_OF_RANDOM]);
 random_q_dot = random('unif',-pi,pi,[7 NUMBER_OF_RANDOM]);
 random_q_whole_body = random('unif',-pi,pi,[8 NUMBER_OF_RANDOM]);
+random_q_serial_whole_body = random('unif',-pi,pi,[serial_whole_body.get_dim_configuration_space() NUMBER_OF_RANDOM]);
 random_dq_a = random('unif',-10,10,[8 NUMBER_OF_RANDOM]);
 %random_dq_b = random('unif',-10,10,[8 NUMBER_OF_RANDOM]);
 
@@ -21,6 +27,10 @@ result_of_pose_jacobian_derivative = zeros(8, 7, NUMBER_OF_RANDOM);
 
 result_of_whole_body_fkm = zeros(8, NUMBER_OF_RANDOM);
 result_of_whole_body_jacobian = zeros(8, 8, NUMBER_OF_RANDOM);
+
+result_of_serial_whole_body_fkm      = zeros(8, NUMBER_OF_RANDOM);
+result_of_serial_whole_body_raw_fkm  = zeros(8, NUMBER_OF_RANDOM);
+result_of_serial_whole_body_jacobian = zeros(8, serial_whole_body.get_dim_configuration_space(), NUMBER_OF_RANDOM);
 
 %       distance_jacobian - Compute the (squared) distance Jacobian.
 result_of_distance_jacobian = zeros(1, 7, NUMBER_OF_RANDOM);
@@ -88,6 +98,10 @@ for i=1:NUMBER_OF_RANDOM
     result_of_fkm(:, i) = vec8(x_pose);
     result_of_pose_jacobian(:,:,i) = J_pose;
     result_of_pose_jacobian_derivative(:,:,i) = serial_manipulator.pose_jacobian_derivative(random_q(:,i),random_q_dot(:,i));
+    %% Results of DQ_SerialWholeBody
+    result_of_serial_whole_body_fkm(:, i)       = vec8(serial_whole_body.fkm(random_q_serial_whole_body(:,i)));
+    result_of_serial_whole_body_raw_fkm(:, i)   = vec8(serial_whole_body.raw_fkm(random_q_serial_whole_body(:,i)));
+    result_of_serial_whole_body_jacobian(:,:,i) = serial_whole_body.pose_jacobian(random_q_serial_whole_body(:,i));
     %% Results of DQ_WholeBody
     result_of_whole_body_fkm(:, i) = vec8(whole_body.fkm(random_q_whole_body(:,i)));
     result_of_whole_body_jacobian(:,:,i) = whole_body.pose_jacobian(random_q_whole_body(:,i));

@@ -1,4 +1,4 @@
-"""(C) Copyright 2019 DQ Robotics Developers
+"""(C) Copyright 2019-2023 DQ Robotics Developers
 
 This file is part of DQ Robotics.
 
@@ -16,15 +16,19 @@ This file is part of DQ Robotics.
     along with DQ Robotics.  If not, see <http://www.gnu.org/licenses/>.
 
 Contributors:
-- Murilo M. Marinho (murilomarinho@ieee.org)
+1. Murilo M. Marinho (murilomarinho@ieee.org)
+   - Responsible for the original implementation.
+2. Juan Jose Quiroz Omana (juanjqogm@gmail.com)
+   - Added tests for the DQ_SerialWholeBody class.
 """
 
 import unittest
 import scipy.io
 import numpy
-from dqrobotics.robots import KukaLw4Robot, KukaYoubotRobot
+from dqrobotics.robots import KukaLw4Robot, KukaYoubotRobot, FrankaEmikaPandaRobot
 from dqrobotics import *
 from DQ_test_facilities import *
+from dqrobotics.robot_modeling import DQ_SerialWholeBody
 
 # The data from MATLAB
 mat = scipy.io.loadmat('DQ_Kinematics_test.mat')
@@ -32,16 +36,32 @@ mat = scipy.io.loadmat('DQ_Kinematics_test.mat')
 h_list = get_list_of_dq_from_mat('random_dq_a', mat)
 # A list of random joint values
 serial_manipulator_q_list = get_list_of_vector_from_mat('random_q', mat)
+
+# lists for the DQ_SerialWholeBody class
+serial_whole_body_q_list    = get_list_of_vector_from_mat('random_q_serial_whole_body', mat)
+serial_whole_body_pose_list = get_list_of_dq_from_mat('result_of_serial_whole_body_fkm', mat)
+serial_whole_body_raw_pose_list = get_list_of_dq_from_mat('result_of_serial_whole_body_raw_fkm', mat)
+
+
 # A list of the result of fkm() for the list of random joint values
 serial_manipulator_pose_list = get_list_of_dq_from_mat('result_of_fkm', mat)
+
 # A list of the result of pose_jacobian() for the list of random joint values
 serial_manipulator_pose_jacobian_list = get_list_of_matrices_from_mat('result_of_pose_jacobian', mat)
+
 # A list of translation_jacobian() for the list of random joint values
 translation_jacobian_list = get_list_of_matrices_from_mat('result_of_translation_jacobian', mat)
+
 line_jacobian_list = get_list_of_matrices_from_mat('result_of_line_jacobian', mat)
 plane_jacobian_list = get_list_of_matrices_from_mat('result_of_plane_jacobian', mat)
+
 # The DQ_SerialManipulator used to calculate everything for DQ_Kinematics as well
 serial_manipulator_robot = KukaLw4Robot.kinematics()
+
+# The DQ_SerialWholeBody robot used to perform the tests
+serial_whole_body_robot = DQ_SerialWholeBody(serial_manipulator_robot)
+serial_whole_body_robot.set_reference_frame(1 + 0.5*E_*(0.5*k_))
+serial_whole_body_robot.add(FrankaEmikaPandaRobot.kinematics())
 
 class DQTestCase(unittest.TestCase):
     global mat
@@ -49,10 +69,14 @@ class DQTestCase(unittest.TestCase):
     global serial_manipulator_q_list
     global serial_manipulator_pose_list
     global serial_manipulator_pose_jacobian_list
+    global serial_whole_body_q_list
+    global serial_whole_body_raw_pose_list
+    global serial_whole_body_pose_list
     global translation_jacobian_list
     global line_jacobian_list
     global plane_jacobian_list
     global serial_manipulator_robot
+    global serial_whole_body_robot
 
     # DQ_SerialManipulator.fkm
     def test_serial_manipulator_fkm(self):
@@ -87,6 +111,16 @@ class DQTestCase(unittest.TestCase):
         whole_body_pose_jacobian_list = get_list_of_matrices_from_mat('result_of_whole_body_jacobian', mat)
         for q, J in zip(whole_body_q_list, whole_body_pose_jacobian_list):
             numpy.testing.assert_almost_equal(whole_body_robot.pose_jacobian(q), J, 12, "Error in DQ_WholeBody.pose_jacobian")
+
+    # DQ_SerialWholeBody.fkm
+    def test_serial_whole_body_fkm(self):
+        for q, x in zip(serial_whole_body_q_list, serial_whole_body_pose_list):
+            self.assertEqual(serial_whole_body_robot.fkm(q), x, "Error in DQ_SerialWholeBody.fkm")
+
+    # DQ_SerialWholeBody.raw_fkm
+    def test_serial_whole_body_raw_fkm(self):
+        for q, x in zip(serial_whole_body_q_list, serial_whole_body_raw_pose_list):
+            self.assertEqual(serial_whole_body_robot.raw_fkm(q), x, "Error in DQ_SerialWholeBody.raw_fkm")
 
     def test_distance_jacobian(self):
         distance_jacobian_list = get_list_of_matrices_from_mat('result_of_distance_jacobian', mat)
