@@ -37,11 +37,11 @@ h_list = get_list_of_dq_from_mat('random_dq_a', mat)
 # A list of random joint values
 serial_manipulator_q_list = get_list_of_vector_from_mat('random_q', mat)
 
-# A lists for the DQ_SerialWholeBody class
+# lists for the DQ_SerialWholeBody class
 serial_whole_body_q_list    = get_list_of_vector_from_mat('random_q_serial_whole_body', mat)
 serial_whole_body_pose_list = get_list_of_dq_from_mat('result_of_serial_whole_body_fkm', mat)
 serial_whole_body_raw_pose_list = get_list_of_dq_from_mat('result_of_serial_whole_body_raw_fkm', mat)
-serial_whole_body_pose_jacobian_list = get_list_of_matrices_from_mat('result_of_serial_whole_body_jacobian', mat)
+
 
 # A list of the result of fkm() for the list of random joint values
 serial_manipulator_pose_list = get_list_of_dq_from_mat('result_of_fkm', mat)
