@@ -41,7 +41,7 @@ serial_manipulator_q_list = get_list_of_vector_from_mat('random_q', mat)
 serial_whole_body_q_list    = get_list_of_vector_from_mat('random_q_serial_whole_body', mat)
 serial_whole_body_pose_list = get_list_of_dq_from_mat('result_of_serial_whole_body_fkm', mat)
 serial_whole_body_raw_pose_list = get_list_of_dq_from_mat('result_of_serial_whole_body_raw_fkm', mat)
-
+serial_whole_body_pose_jacobian_list = get_list_of_matrices_from_mat('result_of_serial_whole_body_jacobian', mat)
 
 # A list of the result of fkm() for the list of random joint values
 serial_manipulator_pose_list = get_list_of_dq_from_mat('result_of_fkm', mat)
@@ -121,6 +121,11 @@ class DQTestCase(unittest.TestCase):
     def test_serial_whole_body_raw_fkm(self):
         for q, x in zip(serial_whole_body_q_list, serial_whole_body_raw_pose_list):
             self.assertEqual(serial_whole_body_robot.raw_fkm(q), x, "Error in DQ_SerialWholeBody.raw_fkm")
+
+    def test_serial_whole_body_pose_jacobian(self):
+        for q, J in zip(serial_whole_body_q_list, serial_whole_body_pose_jacobian_list):
+            numpy.testing.assert_almost_equal(serial_whole_body_robot.pose_jacobian(q), J, 12, "Error in DQ_SerialWholeBody.pose_jacobian")
+
 
     def test_distance_jacobian(self):
         distance_jacobian_list = get_list_of_matrices_from_mat('result_of_distance_jacobian', mat)
